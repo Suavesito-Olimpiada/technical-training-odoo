@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields, models
+from odoo import api, fields, models
+from dateutil.relativedelta import relativedelta
 
 
 class PropertyOffer(models.Model):
@@ -28,3 +29,27 @@ class PropertyOffer(models.Model):
         required=True,
         help="Real estate properties being offered.",
     )
+    validity = fields.Integer(
+        string="Validity (days)",
+        default=7,
+        help="Valid days for the offer.",
+    )
+
+    date_deadline = fields.Date(
+        string="Deadline",
+        compute="_compute_date_deadline",
+        inverse="_inverse_date_deadline",
+        help="Deadline for the offer.",
+    )
+
+    @api.depends("create_date", "validity")
+    def _compute_date_deadline(self):
+        for record in self:
+            if record.create_date:
+                record.date_deadline = record.create_date + relativedelta(days=record.validity)
+            else:
+                record.date_deadline = fields.Date.today()
+
+    def _inverse_date_deadline(self):
+        for record in self:
+            record.validity = (record.date_deadline - record.create_date.date()).days
