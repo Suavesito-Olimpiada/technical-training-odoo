@@ -48,7 +48,7 @@ class PropertyOffer(models.Model):
             if record.create_date:
                 record.date_deadline = record.create_date + relativedelta(days=record.validity)
             else:
-                record.date_deadline = fields.Date.today()
+                record.date_deadline = fields.Date.today() + relativedelta(days=7)
 
     def _inverse_date_deadline(self):
         for record in self:
