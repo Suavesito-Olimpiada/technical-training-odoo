@@ -7,6 +7,7 @@ from dateutil.relativedelta import relativedelta
 class PropertyOffer(models.Model):
     _name = "estate.property.offer"
     _description = "Offers for real state properties"
+    _order = "price DESC"
     _sql_constraints = [
         ("check_price", "CHECK(price > 0)", "The offered price must be strictly positive."),
     ]
@@ -45,6 +46,12 @@ class PropertyOffer(models.Model):
         help="Deadline for the offer.",
     )
 
+    property_type_id = fields.Many2one(
+        related="property_id.property_type_id",
+        store=True,
+        help="Type of property that thte offer os for.",
+    )
+
     @api.depends("create_date", "validity")
     def _compute_date_deadline(self):
         for record in self:
@@ -66,6 +73,7 @@ class PropertyOffer(models.Model):
         for record in self:
             record.property_id._check_availability(message)
             record.property_id._set_offer(record.price, record.partner_id)
+            record.property_id.state = "offer_accepted"
             record.status = "accepted"
         return True
 
