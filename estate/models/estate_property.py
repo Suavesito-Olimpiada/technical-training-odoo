@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from odoo import fields, models
+from odoo import api, fields, models
 from dateutil.relativedelta import relativedelta
 
 
@@ -67,6 +67,7 @@ class Property(models.Model):
         ],
         help="Orientation of the garden.",
     )
+
     property_type_id = fields.Many2one(
         "estate.property.type",
         help="Type of the property.",
@@ -94,5 +95,35 @@ class Property(models.Model):
         help="Offerings for the property.",
     )
 
+    total_area = fields.Integer(
+        compute="_compute_total_area",
+        help="Total area of the property.",
+    )
+    best_price = fields.Float(
+        string="Best Offer",
+        compute="_compute_best_price",
+        help="Best price offer.",
+    )
+
     def _default_date_availability(self):
         return fields.Date.today() + relativedelta(months=3)
+
+    @api.depends("garden_area", "living_area")
+    def _compute_total_area(self):
+        for record in self:
+            record.total_area = record.garden_area + record.living_area
+
+    @api.depends("offer_ids.price")
+    def _compute_best_price(self):
+        for record in self:
+            offered_prices = record.offer_ids.mapped("price")
+            record.best_price = max(offered_prices, default=0.0)
+
+    @api.onchange("garden")
+    def _onchange_garden(self):
+        if self.garden:
+            self.garden_area = 10
+            self.garden_orientation = "north"
+        else:
+            self.garden_area = 0
+            self.garden_orientation = False
