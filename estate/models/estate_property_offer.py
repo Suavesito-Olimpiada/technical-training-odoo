@@ -89,3 +89,16 @@ class PropertyOffer(models.Model):
                 record.property_id._set_offer(0.0, "")
             record.status = "refused"
         return True
+
+    @api.model
+    def create(self, vals):
+        """ Creating a new offer sets the asociated property in the
+        offer_received state. If the property is sold or canceled, or if the
+        price for the new offer is less than the bigger offer, raise an error.
+        """
+        property_offered = self.env["estate.property"].browse(vals["property_id"])
+        message = _("Property cannot create new offers.")
+        property_offered._check_availability(message)
+        property_offered._check_new_offer_price(vals["price"])
+        property_offered.state = "offer_received"
+        return super().create(vals)
