@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from odoo import api, fields, models
+from odoo import api, fields, models, _
+from odoo.exceptions import UserError
 from dateutil.relativedelta import relativedelta
 
 
@@ -84,7 +85,7 @@ class Property(models.Model):
         help="Salesperson, related to a user.",
     )
     tag_ids = fields.Many2many(
-        'estate.property.tag',
+        "estate.property.tag",
         string="Tags",
         help="Tags describing the property.",
     )
@@ -127,3 +128,55 @@ class Property(models.Model):
         else:
             self.garden_area = 0
             self.garden_orientation = False
+
+    def _check_availability(self, error_msg):
+        """ Errors en error if the property is not available. Raises an
+        UserError when the property is not available for sale, that is, if it
+        is sold or canceled. Receives a single record in `self` and an error
+        message.
+        """
+        self.ensure_one()
+        if self.state in ["sold", "canceled"]:
+            message = _("%s property: %s", self.state.capitalize(), error_msg)
+            raise UserError(message)
+
+    def _clear_offers(self):
+        """ Change state of offers to "refused". Set the state of all offers
+        to "refused". Receives a single record in `self`.
+        """
+        self.ensure_one()
+        for offer in self.offer_ids:
+            if offer.status != "refused":
+                offer.status = "refused"
+
+    def _set_offer(self, selling_price, buyer):
+        """ Set selling_price and buyer. Once an offer has been accepted this
+        set the selling price and buyer of the property. Receives a single
+        record in `self`.
+        """
+        self.ensure_one()
+        self._clear_offers()
+        self.selling_price = selling_price
+        self.buyer_id = buyer
+
+    def action_mark_sold(self):
+        """ Set a property as sold when an offer is accepted. If the property
+        is canceled raises an error.
+        """
+        message = _("Property cannot be sold.")
+        for record in self:
+            record._check_availability(message)
+            record.state = "sold"
+        return True
+
+    def action_mark_canceled(self):
+        """ Set a property as canceled and clear selling_price and buyer
+        fields. If the property is already sold raises an error.
+        """
+        message = _("Property cannot be canceled.")
+        for record in self:
+            record._check_availability(message)
+            record._clear_offers()
+            record._set_offer(0.0, "")
+            record.state = "canceled"
+        return True
