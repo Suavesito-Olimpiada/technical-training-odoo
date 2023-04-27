@@ -7,6 +7,9 @@ from dateutil.relativedelta import relativedelta
 class PropertyOffer(models.Model):
     _name = "estate.property.offer"
     _description = "Offers for real state properties"
+    _sql_constraints = [
+        ("check_price", "CHECK(price > 0)", "The offered price must be strictly positive."),
+    ]
 
     price = fields.Float(help="Price offered for the property.")
     status = fields.Selection(

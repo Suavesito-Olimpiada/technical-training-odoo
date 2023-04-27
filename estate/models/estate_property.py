@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from odoo import api, fields, models, _
-from odoo.exceptions import UserError
+from odoo.tools.float_utils import float_compare
+from odoo.exceptions import UserError, ValidationError
 from dateutil.relativedelta import relativedelta
 
 
 class Property(models.Model):
     _name = "estate.property"
     _description = "Real estate properties"
+    _sql_constraints = [
+        ("check_expected_price", "CHECK(expected_price > 0)", "The expected price must be strictly positive."),
+        ("check_selling_price", "CHECK(selling_price >= 0)", "The selling price must be positive."),
+    ]
 
     name = fields.Char(
         string="Title",
@@ -180,3 +185,19 @@ class Property(models.Model):
             record._set_offer(0.0, "")
             record.state = "canceled"
         return True
+
+    @api.constrains("selling_price", "expected_price")
+    def _check_selling_price(self):
+        """ Check that the `selling_price` of a property is greater or equal
+        than 90% of the `expected_price`. The selling price is originally 0.0
+        so only after changing it to something strictly greater than 0.0 is the
+        verification done, for this to work as expected is necessary to use the
+        `>` operator of python intead of the recomended `float_is_zero`.
+        """
+        for record in self:
+            if record.selling_price > 0.0:
+                minimum_price = record.expected_price * 0.9
+                if float_compare(record.selling_price, minimum_price, precision_digits=2) == -1:
+                    raise ValidationError(
+                        _("The selling price cannot be lower than 90% of expected price.")
+                    )
