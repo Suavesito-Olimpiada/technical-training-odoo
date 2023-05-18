@@ -135,13 +135,13 @@ class Property(models.Model):
             self.garden_area = 0
             self.garden_orientation = False
 
-    def _check_availability(self, error_msg):
-        """ Errors en error if the property is not available. Raises an
-        UserError when the property is not available for sale, that is, if it
-        is sold or canceled. Receives a single record in `self` and an error
-        message.
+    def _check_availability(self, error_msg=False):
+        """ Errors if the property is not available. Raises an UserError when
+        the property is not available for sale, that is, if it is sold or
+        canceled. Receives a single record in `self` and an error message.
         """
         self.ensure_one()
+        error_msg = error_msg or _("Cannot complete the action.")
         if self.state in ["sold", "canceled"]:
             message = _("%s property: %s", self.state.capitalize(), error_msg)
             raise UserError(message)
@@ -164,6 +164,17 @@ class Property(models.Model):
         self._clear_offers()
         self.selling_price = selling_price
         self.buyer_id = buyer
+
+    def _check_new_offer_price(self, price):
+        """ Check the price of a new offer. When a new offer is crated it must
+        be greater then all previous offers to be valid. Receives a single
+        record in `self`.
+        """
+        self.ensure_one()
+        max_offer_price = max(self.offer_ids.mapped("price"), default=0.0)
+        message = _("The offer must be greater than %.2f.", max_offer_price)
+        if float_compare(max_offer_price, price, precision_digits=2) == 1:
+            raise UserError(message)
 
     def action_mark_sold(self):
         """ Set a property as sold when an offer is accepted. If the property
@@ -202,3 +213,9 @@ class Property(models.Model):
                     raise ValidationError(
                         _("The selling price cannot be lower than 90% of expected price.")
                     )
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_if_new_or_canceled(self):
+        if any(record.state not in ("new", "canceled") for record in self):
+            message = _("Cannot delete a property that is not new or canceled.")
+            raise UserError(message)
