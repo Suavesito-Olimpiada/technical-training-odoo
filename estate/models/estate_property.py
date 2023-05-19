@@ -75,6 +75,12 @@ class Property(models.Model):
         help="Orientation of the garden.",
     )
 
+    company_id = fields.Many2one(
+        "res.company",
+        required=True,
+        default=lambda self: self.env.company.id,
+        help="Company managing the property."
+    )
     property_type_id = fields.Many2one(
         "estate.property.type",
         help="Type of the property.",

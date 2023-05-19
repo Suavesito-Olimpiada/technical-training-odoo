@@ -5,8 +5,11 @@
     'author': 'Vauxoo',
     'version': '16.0.1.0.0',
     'license': 'OPL-1',
+    'category': 'Real Estate/Brokerage',
     'depends': ['base'],
     'data': [
+        'security/estate_groups.xml',
+        'security/estate_security.xml',
         'security/ir.model.access.csv',
         'views/estate_property_offer_views.xml',
         'views/estate_property_tag_views.xml',
