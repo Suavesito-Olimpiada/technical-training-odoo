@@ -1,0 +1,5 @@
+"id","name","sequence"
+"estate.property_type_res","Residential",0
+"estate.property_type_com","Commercial",1
+"estate.property_type_ind","Industrial",2
+"estate.property_type_lan","Land",3
