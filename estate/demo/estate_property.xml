@@ -65,4 +65,21 @@
             }),
         ]"/>
     </record>
+
+    <record id="property_4" model="estate.property">
+        <field name="name">House in Guanajuato</field>
+        <field name="state">sold</field>
+        <field name="description">Home in magical downtown Guanajuato</field>
+        <field name="postcode">54321</field>
+        <field name="date_availability">2023-05-29</field>
+        <field name="expected_price">10000000</field>
+        <field name="selling_price">12000000</field>
+        <field name="bedrooms">10</field>
+        <field name="living_area">3600</field>
+        <field name="facades">1</field>
+        <field name="garage">False</field>
+        <field name="property_type_id" ref="estate.property_type_res"/>
+        <field name="salesperson_id" ref="base.user_admin"/>
+        <field name="buyer_id" ref="base.res_partner_2"/>
+    </record>
 </odoo>
