@@ -55,10 +55,8 @@ class PropertyOffer(models.Model):
     @api.depends("create_date", "validity")
     def _compute_date_deadline(self):
         for record in self:
-            if record.create_date:
-                record.date_deadline = record.create_date + relativedelta(days=record.validity)
-            else:
-                record.date_deadline = fields.Date.today() + relativedelta(days=7)
+            created_date = record.create_date or fields.Date.context_today(record)
+            record.date_deadline = created_date + relativedelta(days=record.validity)
 
     def _inverse_date_deadline(self):
         for record in self:
