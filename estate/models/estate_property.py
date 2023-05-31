@@ -158,7 +158,7 @@ class Property(models.Model):
         """
         self.ensure_one()
         message = _("Cannot sell a property without an accepted offer.")
-        if self.state != "offer_accepted":
+        if self.state not in ("offer_accepted", "sold"):
             raise UserError(message)
 
     def _clear_offers(self):
@@ -197,8 +197,8 @@ class Property(models.Model):
         """
         message_availability = _("Property cannot be sold.")
         for record in self:
-            record._check_accepted_offer()
             record._check_availability(message_availability)
+            record._check_accepted_offer()
             record.state = "sold"
         return True
 
