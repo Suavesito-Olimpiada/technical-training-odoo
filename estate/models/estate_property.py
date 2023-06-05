@@ -152,6 +152,15 @@ class Property(models.Model):
             message = _("%s property: %s", self.state.capitalize(), error_msg)
             raise UserError(message)
 
+    def _check_accepted_offer(self):
+        """ Verify that there is one accepted offer and raises an error in case
+        there is not. Receives a single record in `self`.
+        """
+        self.ensure_one()
+        message = _("Cannot sell a property without an accepted offer.")
+        if self.state != "offer_accepted":
+            raise UserError(message)
+
     def _clear_offers(self):
         """ Change state of offers to "refused". Set the state of all offers
         to "refused". Receives a single record in `self`.
@@ -184,11 +193,12 @@ class Property(models.Model):
 
     def action_mark_sold(self):
         """ Set a property as sold when an offer is accepted. If the property
-        is canceled raises an error.
+        is canceled, or does not have an accepted offer, raises an error.
         """
-        message = _("Property cannot be sold.")
+        message_availability = _("Property cannot be sold.")
         for record in self:
-            record._check_availability(message)
+            record._check_accepted_offer()
+            record._check_availability(message_availability)
             record.state = "sold"
         return True
 
