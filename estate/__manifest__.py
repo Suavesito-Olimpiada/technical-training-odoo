@@ -20,6 +20,8 @@
         'data/estate.property.type.csv',
         'demo/estate_property.xml',
         'demo/estate_property_offer.xml',
+        'report/estate_property_templates.xml',
+        'report/estate_property_reports.xml',
     ],
     'application': True,
 }
